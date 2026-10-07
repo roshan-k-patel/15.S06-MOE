@@ -16,6 +16,12 @@
    uv sync
    ```
 
+4. Select the environment as your Python interpreter / notebook kernel:
+
+   - **PyCharm:** Python Interpreter → Add New Interpreter → Add Local Interpreter → Select existing →
+     Type: uv → Environment: this repo's `.venv`
+   - **VS Code:** Select Kernel → Python Environments → `.venv`
+
 ## Repository structure (to follow)
 
 ```
