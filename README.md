@@ -1,7 +1,5 @@
 # Which Expert, When? Alpha Models Across Market Regimes
 
-MIT 15.S06, Fall 2026, Project 5.
-
 ## Environment setup
 
 1. Install uv:
@@ -18,48 +16,19 @@ MIT 15.S06, Fall 2026, Project 5.
    uv sync
    ```
 
-## Repository structure
+## Repository structure (to follow)
 
 ```
 15.S06-MOE/
 ├── data/
-│   ├── raw/
-│   │   ├── jkp_us/                1990.parquet … 2025.parquet
-│   │   └── theme_map.csv
+│   ├── raw/           jkp_us/ (1990–2025.parquet), theme_map.csv
 │   ├── interim/
 │   └── processed/
-├── notebooks/
-│   └── 01_initial_analysis.ipynb
-├── src/                           # example
-│   └── moe/
-│       ├── __init__.py
-│       ├── data.py
-│       ├── experts.py
-│       ├── gates.py
-│       └── evaluate.py
-├── scripts/
-│   ├── get_jkp_us.py
-│   ├── get_ctf_data.py
-│   └── train_experts.py
-├── outputs/
-│   ├── figures/
-│   ├── tables/
-│   ├── models/
-│   ├── predictions/
-│   ├── metrics/
-│   └── runs/
-│       └── 2026-10-08_ridge_experts/
-│           ├── config.yaml
-│           ├── predictions.parquet
-│           ├── metrics.csv
-│           └── figures/
-├── reports/
-│   └── moe_progress_report_overleaf.pdf
-├── references/
-│   ├── papers/
-│   │   └── jkp/
-│   └── course/
-│       └── projects2026.pdf
-└── docs/
-    └── concepts-glossary.md
+├── notebooks/         01_initial_analysis.ipynb
+├── src/moe/           __init__.py, data.py, experts.py, gates.py, evaluate.py   # example
+├── scripts/           get_jkp_us.py, get_ctf_data.py, train_experts.py
+├── outputs/           figures/, tables/, models/, predictions/, metrics/, runs/<date>_<name>/
+├── reports/           moe_progress_report_overleaf.pdf
+├── references/        papers/jkp/, course/projects2026.pdf
+└── docs/              concepts-glossary.md
 ```
