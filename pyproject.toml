@@ -1,0 +1,17 @@
+[project]
+name = "moe-research"
+version = "0.1.0"
+description = "15.S06 Project 5: mixture of experts across market regimes on JKP data"
+requires-python = ">=3.12"
+dependencies = [
+    "ipykernel",
+    "keyring",
+    "matplotlib",
+    "numpy",
+    "openpyxl",
+    "pandas",           # wrds 3.5 requires pandas 2.2.x
+    "psycopg2-binary",
+    "pyarrow",
+    "sqlalchemy",       # wrds 3.5 requires sqlalchemy < 2.1
+    "wrds>=3.5",
+]
