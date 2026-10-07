@@ -23,11 +23,8 @@
    - **VS Code:** Select Kernel → Python Environments → `.venv`
      (if not listed: Enter interpreter path… → `.venv/bin/python`)
 
-5. Optional: activate the environment in your terminal (or prefix commands with `uv run`):
-
-   ```bash
-   source .venv/bin/activate
-   ```
+> [!TIP]
+> Before running scripts from the terminal, activate the environment with `source .venv/bin/activate`.
 
 ## Repository structure (to follow)
 
