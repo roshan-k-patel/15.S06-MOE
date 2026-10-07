@@ -2,9 +2,12 @@
 Download US stocks from the full JKP panel (contrib.global_factor) on WRDS.
 
 - US only, with JKP's four standard screens
+- only the TOP_N largest stocks by market cap (me) in each month, ranked on WRDS
+  before download; set TOP_N = None to download every stock
 - only the 153 JKP characteristics + identifiers + target (not all ~400 columns)
 - one query per year, saved as its own parquet file, so a crash or Ctrl-C
   loses at most one year and re-running skips years already downloaded
+- paths are relative to the repo root, so it can be run from any folder
 
 Setup (once):
     pip install wrds pandas pyarrow openpyxl
@@ -17,7 +20,11 @@ from pathlib import Path
 import pandas as pd
 import wrds
 
-OUT = Path("data/raw/jkp_us")
+TOP_N: int | None = 2000            # largest N stocks by market cap per month; None = all
+
+ROOT = Path(__file__).resolve().parents[1]
+RAW = ROOT / "data" / "raw"
+OUT = RAW / "jkp_us"   # same folder whatever TOP_N is: clear it before switching universes
 OUT.mkdir(parents=True, exist_ok=True)
 
 START_YEAR, END_YEAR = 1990, 2026   # characteristics are sparse before the 1960s
@@ -45,21 +52,39 @@ def load_metadata() -> tuple[list[str], pd.DataFrame]:
     return chars, themes
 
 
-def download(chars: list[str]) -> None:
+def download(chars: list[str], years=None, wrds_username: str | None = None) -> None:
+    """Download each year in `years` (default START_YEAR..END_YEAR), skipping saved years.
+
+    Passing wrds_username lets the connection use ~/.pgpass without prompting.
+    """
+    years = range(START_YEAR, END_YEAR + 1) if years is None else years
     cols = ", ".join(ID_COLS + EXTRA_COLS + chars)
-    db = wrds.Connection()
+    db = wrds.Connection(wrds_username=wrds_username) if wrds_username else wrds.Connection()
     try:
-        for year in range(START_YEAR, END_YEAR + 1):
+        for year in years:
             out = OUT / f"{year}.parquet"
             if out.exists():
                 continue
-            sql = f"""
-                SELECT {cols}
-                FROM contrib.global_factor
+            where = f"""
                 WHERE excntry = 'USA'
                   AND {SCREENS}
                   AND eom BETWEEN '{year}-01-01' AND '{year}-12-31'
             """
+            if TOP_N:
+                # rank screened US stocks by market cap within each month on the
+                # server, and download only the largest TOP_N
+                sql = f"""
+                    SELECT * FROM (
+                        SELECT {cols},
+                               ROW_NUMBER() OVER (PARTITION BY eom ORDER BY me DESC, id) AS mcap_rank
+                        FROM contrib.global_factor
+                        {where}
+                          AND me IS NOT NULL
+                    ) ranked
+                    WHERE mcap_rank <= {TOP_N}
+                """
+            else:
+                sql = f"SELECT {cols} FROM contrib.global_factor {where}"
             df = db.raw_sql(sql, date_cols=["eom"])
             if df.empty:
                 print(f"{year}: no rows")
@@ -81,7 +106,7 @@ def load_panel() -> pd.DataFrame:
 
 if __name__ == "__main__":
     chars, themes = load_metadata()
-    themes.to_csv("data/raw/theme_map.csv", index=False)
+    themes.to_csv(RAW / "theme_map.csv", index=False)
     print(f"{len(chars)} characteristics, {themes['cluster'].nunique()} themes")
 
     download(chars)
