@@ -21,6 +21,13 @@
    - **PyCharm:** Python Interpreter → Add New Interpreter → Add Local Interpreter → Select existing →
      Type: uv → Environment: this repo's `.venv`
    - **VS Code:** Select Kernel → Python Environments → `.venv`
+     (if not listed: Enter interpreter path… → `.venv/bin/python`)
+
+5. Optional: activate the environment in your terminal (or prefix commands with `uv run`):
+
+   ```bash
+   source .venv/bin/activate
+   ```
 
 ## Repository structure (to follow)
 
