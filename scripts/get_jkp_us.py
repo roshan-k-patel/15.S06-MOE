@@ -2,8 +2,9 @@
 Download US stocks from the full JKP panel (contrib.global_factor) on WRDS.
 
 - US only, with JKP's four standard screens
-- only the TOP_N largest stocks by market cap (me) in each month, ranked on WRDS
-  before download; set TOP_N = None to download every stock
+- only stocks in SIZE_GROUPS, JKP's size groups from that month's NYSE size
+  percentiles (mega + large + small = above the NYSE 20th percentile, i.e. all
+  non-micro stocks), filtered on WRDS before download; None = every group
 - only the 153 JKP characteristics + identifiers + target (not all ~400 columns)
 - one query per year, saved as its own parquet file, so a crash or Ctrl-C
   loses at most one year and re-running skips years already downloaded
@@ -20,11 +21,11 @@ from pathlib import Path
 import pandas as pd
 import wrds
 
-TOP_N: int | None = 2000            # largest N stocks by market cap per month; None = all
+SIZE_GROUPS: list[str] | None = ["mega", "large", "small"]   # non-micro stocks; None = all groups
 
 ROOT = Path(__file__).resolve().parents[1]
 RAW = ROOT / "data" / "raw"
-OUT = RAW / "jkp_us"   # same folder whatever TOP_N is: clear it before switching universes
+OUT = RAW / "jkp_us"   # same folder whatever the filters are: clear it before switching universes
 OUT.mkdir(parents=True, exist_ok=True)
 
 START_YEAR, END_YEAR = 1990, 2026   # characteristics are sparse before the 1960s
@@ -65,26 +66,16 @@ def download(chars: list[str], years=None, wrds_username: str | None = None) -> 
             out = OUT / f"{year}.parquet"
             if out.exists():
                 continue
-            where = f"""
+            sql = f"""
+                SELECT {cols} FROM contrib.global_factor
                 WHERE excntry = 'USA'
                   AND {SCREENS}
                   AND eom BETWEEN '{year}-01-01' AND '{year}-12-31'
             """
-            if TOP_N:
-                # rank screened US stocks by market cap within each month on the
-                # server, and download only the largest TOP_N
-                sql = f"""
-                    SELECT * FROM (
-                        SELECT {cols},
-                               ROW_NUMBER() OVER (PARTITION BY eom ORDER BY me DESC, id) AS mcap_rank
-                        FROM contrib.global_factor
-                        {where}
-                          AND me IS NOT NULL
-                    ) ranked
-                    WHERE mcap_rank <= {TOP_N}
-                """
-            else:
-                sql = f"SELECT {cols} FROM contrib.global_factor {where}"
+            if SIZE_GROUPS:
+                # size_grp is set by JKP each month from that month's NYSE percentiles
+                groups = ", ".join(f"'{s}'" for s in SIZE_GROUPS)
+                sql += f"  AND size_grp IN ({groups})\n"
             df = db.raw_sql(sql, date_cols=["eom"])
             if df.empty:
                 print(f"{year}: no rows")
