@@ -5,6 +5,7 @@ description = "15.S06 Project 5: mixture of experts across market regimes on JKP
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "ipykernel",
+    "jinja2>=3.1.6",
     "keyring",
     "matplotlib",
     "numpy",
